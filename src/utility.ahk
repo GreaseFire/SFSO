@@ -64,20 +64,33 @@ WM_EXITSIZEMOVE()
 	return 0
 }
 
-listAdd( byRef list, item) {
+; listAdd is refering to wrong concept. What we really want is a set.
+; adds item to set
+; returns true if set changed, false otherwise
+setAdd( byRef set, item) {
 	static  del := "-"
-  list:=( list!="" ? ( list . del . item ) : item )
-  return list
+	if not instr(set,item)
+	{
+		set := ( set == "" ? item : ( set . del . item ))
+		return true
+	}
+	return false
 }
-
-listDelItem( byRef list, item) {
+; listDelItem is refering to wrong concept. What we really want is a set.
+; removes item from set
+; returns true if set changed, false otherwise
+setRemove( byRef set, item) {
 	static  del := "-"
-	ifEqual, item,, return list
-	list:=del . list . del
-	StringReplace, list, list, %item%%del%
-	StringTrimLeft, list, list, 1
-	StringTrimRight, list, list, 1
-	return list
+	ifEqual, item,, return
+	if instr(set,item)
+	{
+		set := del . set . del
+		StringReplace, set, set, %item%%del%
+		StringTrimLeft, set, set, 1
+		StringTrimRight, set, set, 1
+		return true
+	}
+	return false
 }
 
 Format2Digits(_val) {

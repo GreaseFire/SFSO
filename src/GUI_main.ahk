@@ -38,13 +38,13 @@ Gui, add, CheckBox,	y+14		vTotalLimitEnabled	gSpinnersOnOff	Checked%TotalLimitEn
 Gui, add, CheckBox,	y+14		vLimitTimeEnabled	gSpinnersOnOff	Checked%LimitTimeEnabled%	, Limit total time to (min):
 
 Gui, add, Edit,		ys-3	w40	vRegisterInterval			Number	Limit3	, %RegisterInterval%
-Gui, add, UpDown, 					gRegisterIntervalUpDown	Range1-180		, %RegisterInterval%
+Gui, add, UpDown, 					gRegisterIntervalUpDown	Range5-180		, %RegisterInterval%
 Gui, add, Edit,				wp	vKeepOpen					Number	Limit3	, %keepOpen%
-Gui, add, UpDown, 															, %keepOpen%
+Gui, add, UpDown, 											Range1-30		, %keepOpen%
 Gui, add, Edit,				wp	vTotalLimit					Number	Limit3	, %TotalLimit%
-Gui, add, UpDown,											Range2-300		, %TotalLimit%
+Gui, add, UpDown,											Range1-300		, %TotalLimit%
 Gui, add, Edit,				wp	vLimitTime					Number	Limit3	, %LimitTime%
-Gui, add, UpDown,					gLimitTimeUpDown		Range15-750		, %LimitTime%
+Gui, add, UpDown,					gLimitTimeUpDown		Range10-360		, %LimitTime%
 
 ; Gui, Add, Button, ys Disabled, TabControlResizeTest
 
@@ -135,7 +135,7 @@ upDownChangeBy("RegisterInterval", 5)
 return
 
 LimitTimeUpDown:
-upDownChangeBy("LimitTime", 15)
+upDownChangeBy("LimitTime", 10)
 return
 
 CloseIntervUpDown:
@@ -178,12 +178,17 @@ upDownChangeBy(editControlVarName, amount)
 	old%editControlVarName% = %currentValue%
 }
 
+; updates the info area
+; call setStatus() or setStatus(0) to only update openTables and regSoFar
 setStatus(statusType=0)
 {
 	global
 	static oldStatus := 0
 	GuiControl, , OpenTables, Tables open/waiting: %OpenTables%
 	GuiControl, , RegSofar, SNG:s registered so far: %RegSofar%
+	
+	if (statusType == 0)
+		return
 	
 	if (statusType == MANUAL_PAUSE)
 	{
@@ -218,5 +223,4 @@ setStatus(statusType=0)
 		if (statusType == TIME_LIMIT_OFF)
 			GuiControl, , cdown, Time Limit off
 	}
-	;Gui, show, AutoSize NA
 }

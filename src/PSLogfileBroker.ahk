@@ -24,6 +24,7 @@
 ; Attempts to find the correct path for pokerstars.log.0 utilizing the
 ; 'Open My Settings Folder' entry in PokerStars clients 'Help' menu.
 ; If that fails it will present a dialog for manual selection
+; TODO auto detection failing is most likely due to SFSO needing elevation
 setPSLogFilePath:
 IfNotExist, %psSettingsFolder%
 {
@@ -43,7 +44,7 @@ IfNotExist, %psSettingsFolder%
 		WinClose
 		StringTrimLeft, visibleText, visibleText, 9		; removes 'Address: ' at the beginning
 		StringGetPos, pathEndPos, visibleText, `r
-		StringLeft, psSettingsFolder, visibleText, pathEndPos	; removes everything from the first CR onwards
+		StringLeft, psSettingsFolder, visibleText, pathEndPos	; removes everything from the first `r`n onwards
 	}
 	else
 	{
@@ -90,8 +91,8 @@ ReplaceByte( hayStackAddr, hayStackSize, ByteFrom=0, ByteTo=1, StartOffset=0, Nu
 ;			or store the content in a ByRef variable 
 ;			and return the amount read (if nothing is read this would be 0 and intuitive false
 ;		refactor DllCall and VarSetCapacity for Unicode compatibility
+; THX Sean for File.ahk : http://www.autohotkey.com/forum/post-124759.html
 CheckFile(File, mode=0) {
-   ; THX Sean for File.ahk : http://www.autohotkey.com/forum/post-124759.html
    Static CF := ""   ; Current File
    Static FP := 0    ; File Pointer
    Static OPEN_EXISTING := 3

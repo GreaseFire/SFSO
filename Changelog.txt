@@ -1,0 +1,35 @@
+
+===================================================================================================
+ 4.2.2
+	- Increased reliability of table activation
+	- Added safeguard for buyin/confirm dialogs left open after failed registration attempt
+	- Fixed 'Tables open/waiting' not updating when paused or limit reached
+	- Adjusted intervals and max values for several Spinners
+	- Bugfix: Registered too many games if 'SNG Total Limit' was smaller than 'SNG's to keep open' 
+===================================================================================================
+ 4.2.1
+	- Bugfix: SNG Total Limit was always enabled
+===================================================================================================
+ 4.2.0
+	- Restructured the GUI
+	- Restored full functionality for all options
+	- General cleanup
+	- Added check to ensure correct AHK version is used
+	- Added option to switch focus back to games after registering
+===================================================================================================
+ 4.1.1
+	- Bugfix: 4.1 didn't actually save its Settings (d'oh!)
+===================================================================================================
+ 4.1
+	- SFSO will now remember its on screen position
+	- Added check whether script is running in ANSI mode
+	- Added auto detection for pokerstars logfile
+	- Request Admin privileges if called for
+	- Added tool to identify controls in PS client
+	- Settings are now kept in the current users AppData folder
+===================================================================================================
+ v4.01
+ added: option to autubuyin if full, hide/show window
+ fixed issue with skipping first sng in lobby 
+===================================================================================================
+ 4.0 version fixed by Max1mums

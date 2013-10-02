@@ -19,44 +19,16 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
- v4.21
- - Bugfix: SNG Total Limit was always enabled
-
- v4.2
- - Restructured the GUI
- - Restored full functionality for all options
- - General cleanup
- - Added check to ensure correct AHK version is used
- - Added option to switch focus back to games after registering
- 
- v4.11
- - Bugfix: 4.1 didn't actually save its Settings (d'oh!)
- 
- v4.1
- - SFSO will now remember its on screen position
- - Added check whether script is running in ANSI mode
- - Added auto detection for pokerstars logfile
- - Request Admin privileges if called for
- - Added tool to identify controls in PS client
- - Settings are now kept in the current users AppData folder
-
- v4.01
- added: option to autubuyin if full, hide/show window
- fixed issue with skipping first sng in lobby 
-
- 4.0 version fixed by Max1mums
 */
 
-
-sfsoVersion = 4.21	; Used for the GUI Title and to migrate settings
+sfsoVersion = 4.2.2	; Used for the GUI Title and to migrate settings
 debug := false		; if true SFSO saves its settings in the working dir and enables Hotkeys for reload and ListVars at the bottom of the script
 #NoEnv
 #SingleInstance, Force
 SendMode Input
 SetWorkingDir %A_ScriptDir%
-;#Warn
-;#Warn, LocalSameAsGlobal, Off
+#Warn
+#Warn, LocalSameAsGlobal, Off
 SetBatchLines, -1
 SetTitleMatchMode, 2
 
@@ -172,6 +144,7 @@ Return
 
 
 ButtonResume:
+SetTimer, updateWhilePaused, Off
 Gui, Submit, NoHide
 GuiControl, Disable, Resume
 GuiControl, Enable, Pause
@@ -183,7 +156,8 @@ stopRegistering := false
 OpenTables := 0
 tables=
 waitForSetFinish := false
-OpenTables := CountTourneys(1)
+keepOpen := (keepOpen > totalLimit ? totalLimit : keepOpen)	; ensure totalLimit is obeyed even if keepOpen is higher than totalLimit 
+updateTourneyCount(1)
 selectNextGame(true)	; make sure we start at the top of the list
 if minLob
 	gosub, moveLobby
@@ -206,8 +180,20 @@ GuiControl, Enable, Resume
 if minLob
 	gosub, buttonShowLobby
 setStatus(MANUAL_PAUSE)
+SetTimer, updateWhilePaused, 1000
 Return
 
+; called from a timer after ButtonPause has triggered
+; keeps updating the Tables open/waiting counter until either:
+;	- all games are finished
+; 	- auto registering resumes/starts via ButtonResume
+updateWhilePaused:
+Critical
+if (updateTourneyCount())
+	setStatus()
+else
+	SetTimer, updateWhilePaused, Off
+return
 
 ; called from a timer whose frequency is determined by RegisterInterval
 ; checks how many games are open/waiting
@@ -236,7 +222,10 @@ If (PhysicalTables >= KeepOpen)
 	Return
 }
  */
-OpenTables := CountTourneys()
+ IfWinExist, Tournament Registration ahk_class #32770	; under heavy load a registration might get interrupted leaving one the dialogs open
+	WinClose, Tournament Registration ahk_class #32770	; if that happened on the last pass we close it now
+
+updateTourneyCount()
 If OpenTables is not Number
 	OpenTables := 0
 ;setStatus(TABLES)	; implicitly done on any call to setStatus() now
@@ -261,7 +250,7 @@ times := 1
 If (BatchReg and (openTables == 0))
 {
 	times := KeepOpen - OpenTables
-	times := times > scrlDwn ? scrlDwn : times
+	times := (times > scrlDwn ? scrlDwn : times)
 	; assert times <= scrlDwn
 }
 registerForGame(times)	
@@ -325,8 +314,8 @@ registerForGame(times = 1) {
 switchFocusToActiveGame:
 ; The 'Registered In Tournaments' dialog, if present, will steal focus, so we wait for that to happen
 IfWinExist, Registered In Tournaments ahk_class #32770
-	; times out after 3 seconds to avoid the unlikely event that the dialog exists but never gets focus
-	WinWaitActive, Registered In Tournaments ahk_class #32770,, 3
+	; times out after 5 seconds to avoid the unlikely event that the dialog exists but never gets focus
+	WinWaitActive, Registered In Tournaments ahk_class #32770,, 5
 ; If there is at least one game running we switch focus to it
 IfWinExist, ahk_class PokerStarsTableFrameClass
 	WinActivate, ahk_class PokerStarsTableFrameClass
@@ -343,7 +332,7 @@ return
 ; this allows us to tell which dialog we are dealing with
 ; TODO: What happens if registration got declined because the game was already full?
 confirmRegistrationDialogs:
-WinWait, Tournament Registration ahk_class #32770, , 3
+WinWait, Tournament Registration ahk_class #32770, , 5
 if (not ErrorLevel)	; if no dialog showed up we are done and skip the rest
 {
 	; now we check if this is the buyin dialog and if so click its 'OK' button
@@ -355,7 +344,7 @@ if (not ErrorLevel)	; if no dialog showed up we are done and skip the rest
 		ControlSend, PokerStarsButtonClass1, {Space}, Tournament Registration ahk_class #32770
 	}
 	; now we wait for and deal with the confirmation dialog
-	WinWait, Tournament Registration ahk_class #32770, , 3
+	WinWait, Tournament Registration ahk_class #32770, , 5
 	if autoIfFull
 		ControlSend, PokerStarsButtonClass2, {Space}, Tournament Registration ahk_class #32770
 	else
@@ -391,21 +380,25 @@ selectNextGame(reset = false)
 		ClickdirectionCount := 0
 	}
 }
+
 ; uses PS logfile to count how many games are running and registered for
 ; if mode == 1 it will check the full logfile
 ; if mode == 0 it only checks lines appended since the last call to countTourneys()
-; updates RegSoFar (total number of games registered)
-CountTourneys(mode=0) {
-	global logfile, RegSofar,tables
+; updates RegSoFar (total number of games registered) and openTables
+updateTourneyCount(mode=0) {
+	global logfile, RegSofar, tables, openTables
 	static regtourneys := ""
+	logLines := ""
+	tcount := 0
+	tnumber := ""
 	
 	if mode=0
-		log := CheckFile(logfile)
+		logLines := CheckFile(logfile)
 	else
-		log := CheckFile(logfile,1)
-	Loop, Parse, log, `n,
+		logLines := CheckFile(logfile,1)
+	Loop, Parse, logLines, `n,
 	{
-		tnumber =
+		tnumber := ""
 		tFrame := instr(A_loopField,"TournFrame")
 		tColon := instr(A_loopField,"::")
 		tTilde := instr(A_loopField,"~")
@@ -414,7 +407,7 @@ CountTourneys(mode=0) {
 		{
 			if tFrame
 			{
-				tnumber:=RegExReplace(A_loopField, "TournFrame '", "")
+				tnumber := RegExReplace(A_loopField, "TournFrame '", "")
 				stringleft,tnumber,tnumber,instr(tnumber,A_space)-2
 			}
 			else
@@ -424,9 +417,8 @@ CountTourneys(mode=0) {
 				if instr(tnumber,A_space)
 					StringLeft, tnumber, tnumber, instr(tnumber,A_space)-1
 			}
-			tnumber:=RegExReplace(tnumber, "[`n,`r]", "")
-			if not instr(tables,tnumber)
-				listadd(tables,tnumber)
+			tnumber := RegExReplace(tnumber, "[`n,`r]", "")
+			setAdd(tables,tnumber)
 		}
 		else
 		{
@@ -442,27 +434,21 @@ CountTourneys(mode=0) {
 				else
 					if tRTremove
 						stringtrimleft,tnumber,A_loopField,instr(A_loopField,A_space,"",0)
-				tnumber:=RegExReplace(tnumber, "[`n,`r]", "")
-				if instr(tables,tnumber)
-					listDelItem(tables,tnumber)
+				tnumber := RegExReplace(tnumber, "[`n,`r]", "")
+				setRemove(tables,tnumber)
 			}
 		}
 			
 	}
-	log=
-	tcount:=0
 	Loop, Parse, tables, -,
 	{
 		if A_Loopfield is number
 		{
 			tcount++
-			if !(instr(regtourneys,A_Loopfield)>0)
-			{
-				listadd(regtourneys,A_Loopfield)
-				if mode=0
-					RegSofar++
-			}
+			if (setAdd(regtourneys,A_Loopfield) and mode == 0)	; see utility.setAdd() for return value
+				RegSofar++
 		}
 	}
-	return tcount
+	openTables :=  tcount
+	return tcount	; implicit false if no games open/waiting
 }
