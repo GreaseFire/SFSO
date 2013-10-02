@@ -1,5 +1,10 @@
 
 ===================================================================================================
+ 4.3.1
+	- Increased wait time when switching from a registered to a non-registered game
+	- Reintroduced "available games" setting
+	- Bugfix: Spinners were not disabled on program start (where indicated by settings)
+===================================================================================================
  4.3.0
 	- Added autodetermination of available Games (aka 'scroll down')
 	- Increased speed of logfile parser

@@ -174,10 +174,17 @@ getActiveFilter()
 ; overrides TitleMatchMode while setting filter states to improve speed
 setActiveFilter(filter)
 {
-	global PS_FILTER_WINDOW, PS_CLASS, learning, scrlDwn
-	
-	learning := true
-	scrlDwn := 1
+	global PS_FILTER_WINDOW, PS_CLASS, learning, scrlDwn, OverrideScrlDwn, availableGames
+	if OverrideScrlDwn
+	{
+		learning := false
+		scrlDwn := availableGames - 1
+	}
+	else
+	{
+		learning := true
+		scrlDwn := 1
+	}
 	filterID := openPSFilterWindow()
 	resetFilter()
 	overrideTitleMatchMode(true)

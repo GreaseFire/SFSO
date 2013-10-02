@@ -31,12 +31,15 @@ Gui, font, cOlive , Segoe UI
 
 Gui, add, Text,		y+15 Section																	, Register every (sec):
 Gui, add, Text, 																					, No of SNG:s to keep open:
+Gui, add, CheckBox,	y+14		vOverrideScrlDwn	gScrlDwnOnOff			, Override available games:
 Gui, add, CheckBox,	y+14		vTotalLimitEnabled	gTotalLimitOnOff		, Limit total SNG:s to:
 Gui, add, CheckBox,	y+14		vLimitTimeEnabled	gLimitTimeOnOff			, Limit total time to (min):
 
 Gui, add, Edit,		ys-3	w40	vRegisterInterval				Right	Number	Limit3
 Gui, add, UpDown, 					gUpDownRegisterInterval		Range5-180				
 Gui, add, Edit,				wp	vKeepOpen						Right	Number	Limit3	
+Gui, add, UpDown, 					gEnableDefaultButtons		Range1-30				
+Gui, add, Edit,				wp	vAvailableGames					Right	Number	Limit3	
 Gui, add, UpDown, 					gEnableDefaultButtons		Range1-30				
 Gui, add, Edit,				wp	vTotalLimit						Right	Number	Limit3	
 Gui, add, UpDown,					gEnableDefaultButtons		Range1-300				
@@ -117,6 +120,15 @@ if (A_GuiEvent == "Normal")
 }
 return
 
+ScrlDwnOnOff:
+if (A_GuiEvent == "Normal")
+{
+	Gui, Submit, NoHide
+	GuiControl, Enabled%OverrideScrlDwn%	, AvailableGames
+	gosub, enableDefaultButtons
+}
+return
+
 UpDownRegisterInterval:
 if (A_GuiEvent == "Normal")
 {
@@ -183,6 +195,8 @@ ButtonSafeDefault:
 Gui, Submit, NoHide
 IniWrite, %RegisterInterval%	, %sfsoSettingsFolder%\SFSO.ini, Settings, RegisterInterval
 IniWrite, %KeepOpen%			, %sfsoSettingsFolder%\SFSO.ini, Settings, KeepOpen
+IniWrite, %OverrideScrlDwn%			, %sfsoSettingsFolder%\SFSO.ini, Settings, OverrideScrlDwn
+IniWrite, %AvailableGames%			, %sfsoSettingsFolder%\SFSO.ini, Settings, AvailableGames
 IniWrite, %TotalLimit%			, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimit
 IniWrite, %TotalLimitEnabled%	, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimitEnabled
 IniWrite, %LimitTime%			, %sfsoSettingsFolder%\SFSO.ini, Settings, LimitTime
@@ -194,6 +208,9 @@ return
 ButtonLoadDefault:
 IniRead, RegisterInterval	, %sfsoSettingsFolder%\SFSO.ini, Settings, RegisterInterval		, 20
 IniRead, KeepOpen			, %sfsoSettingsFolder%\SFSO.ini, Settings, KeepOpen				, 3
+IniRead, OverrideScrlDwn			, %sfsoSettingsFolder%\SFSO.ini, Settings, OverrideScrlDwn				, 0
+IniRead, TotalLimit			, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimit			, 4
+IniRead, AvailableGames			, %sfsoSettingsFolder%\SFSO.ini, Settings, AvailableGames			, 4
 IniRead, TotalLimit			, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimit			, 4
 IniRead, TotalLimitEnabled	, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimitEnabled	, 1
 IniRead, LimitTime			, %sfsoSettingsFolder%\SFSO.ini, Settings, LimitTime			, 30
@@ -215,6 +232,9 @@ GuiControl, , TotalLimit		, %TotalLimit%
 GuiControl, , TotalLimitEnabled	, %TotalLimitEnabled%	
 GuiControl, , LimitTime			, %LimitTime%		
 GuiControl, , LimitTimeEnabled	, %LimitTimeEnabled%
+GuiControl, Enabled%TotalLimitEnabled%	, TotalLimit
+GuiControl, Enabled%LimitTimeEnabled%	, LimitTime
+GuiControl, Enabled%OverrideScrlDwn%	, AvailableGames
 gosub, disableDefaultButtons
 return
 
