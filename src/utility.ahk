@@ -40,10 +40,20 @@ if (requestElevation and not A_IsAdmin)
 }
 return
 
+; run from a timer at program start
+; anything depending on PS client running goes in here
+establishConnectionToPSclient:
+; check version
+; set logfile path
+; set filter
+
+; enable gui controls
+return
+
 ; gets called by a Timer until PS client is running
 ; checks if the client got updated and if so displays a reminder for the ID Tool
 checkPSVersion:
-ifWinExist PokerStars Lobby ahk_class #32770
+ifWinExist %PS_LOBBY% ahk_class %PS_CLASS%
 {
 	SetTimer, checkPSVersion, Off
 	WinGet, psExePath, ProcessPath
@@ -54,17 +64,7 @@ ifWinExist PokerStars Lobby ahk_class #32770
 }
 return
 
-; called after the GUI window has been moved
-; see http://msdn.microsoft.com/en-us/library/windows/desktop/ms632623(v=vs.85).aspx
-WM_EXITSIZEMOVE()
-{
-	global
-	IfWinExist, ahk_id %mainGuiId%	; WM_EXITSIZEMOVE gets called at least once before the main GUI is shown at which point WinGetPos would fail
-		WinGetPos, GuiScreenPosX, GuiScreenPosY, , , ahk_id %mainGuiId%
-	return 0
-}
-
-; listAdd is refering to wrong concept. What we really want is a set.
+; listAdd and listDelItem were referring to wrong concept. What we really want is a set.
 ; adds item to set
 ; returns true if set changed, false otherwise
 setAdd( byRef set, item) {
@@ -76,7 +76,6 @@ setAdd( byRef set, item) {
 	}
 	return false
 }
-; listDelItem is refering to wrong concept. What we really want is a set.
 ; removes item from set
 ; returns true if set changed, false otherwise
 setRemove( byRef set, item) {
@@ -112,8 +111,9 @@ Format3Digits(_val) {
 }
 
 donation() {
-	WinMenuSelectItem, PokerStars Lobby,, Requests, Transfer Funds, Transfer to another player...
-	WinWait, Transfer Funds ahk_class #32770, , 10
+	global
+	WinMenuSelectItem, %PS_LOBBY_LOGGED_IN%,, Requests, Transfer Funds, Transfer to another player...
+	WinWait, %PS_TRANSFER% ahk_class %PS_CLASS%, , 10
 	if not ErrorLevel
 	{
 		WinGet, tf, id

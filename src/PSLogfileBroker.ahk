@@ -25,18 +25,22 @@
 ; 'Open My Settings Folder' entry in PokerStars clients 'Help' menu.
 ; If that fails it will present a dialog for manual selection
 ; TODO auto detection failing is most likely due to SFSO needing elevation
+; TODO rewrite this to trigger at every program start
+; Alternative: use handle.exe (http://technet.microsoft.com/en-us/sysinternals/bb896655.aspx)
+;	requires manual download and admin rights
+;	but gets the actual file handle used by PS client
 setPSLogFilePath:
 IfNotExist, %psSettingsFolder%
 {
-	ifWinNotExist, PokerStars Lobby ahk_class #32770
+	ifWinNotExist, %PS_Lobby% ahk_class %PS_CLASS%
 		MsgBox, Please ensure PokerStars is running before proceeding.
-	WinWait, PokerStars Lobby ahk_class #32770
+	WinWait, %PS_LOBBY% ahk_class %PS_CLASS%
 	; auto detection will fail if there is already a Explorer window whose address points to a folder named 'pokerstars'
 	; as a workaround we first give focus to PS lobby
 	; then we select "Help > Open My Settings Folder" in Lobby menu
 	; this opens and activates the Explorer window we are looking for
-	WinActivate, PokerStars Lobby ahk_class #32770
-	WinMenuSelectItem, PokerStars Lobby ahk_class #32770,, Help, Open My Settings Folder
+	WinActivate, %PS_LOBBY% ahk_class %PS_CLASS%
+	WinMenuSelectItem, %PS_LOBBY% ahk_class %PS_CLASS%,, Help, Open My Settings Folder
 	WinWaitActive, PokerStars ahk_class CabinetWClass,, 2	; wait up to 2 seconds for the Explorer window to open
 	if not ErrorLevel
 	{
@@ -59,15 +63,20 @@ IfNotExist, %psSettingsFolder%
 	IniWrite, %psSettingsFolder%, %sfsoSettingsFolder%\SFSO.ini, Settings, psSettingsFolder
 }
 logfile := psSettingsFolder . "\pokerstars.log.0"
+backupLog := psSettingsFolder . "\pokerstars.log.1"
 IfNotExist %logfile%
 {
 	MsgBox, Could not find "%logfile%", please recheck the configuration.
 	ExitApp
 }
+;~ IfNotExist %backupLog%
+;~ {
+	;~ MsgBox, Could not find "%backupLog%", please recheck the configuration.
+	;~ ExitApp
+;~ }
 return
 
 ; TODO: get rid of this coding horror (as well as checkFile)
-;	at the very least this needs to be updated to work on Unicode builds, but
 ReplaceByte( hayStackAddr, hayStackSize, ByteFrom=0, ByteTo=1, StartOffset=0, NumReps=-1)
 {	Static fun := ""
 	IfEqual,fun,
@@ -89,6 +98,7 @@ ReplaceByte( hayStackAddr, hayStackSize, ByteFrom=0, ByteTo=1, StartOffset=0, Nu
 ; mode == 1	returns full File content
 ; mode == 0	returns only what was appended to File since the last call to CheckFile
 ; returns false on error
+; TODO AHK_L allows implementing this functionality with a file object. Using that should avoid the Unicode incompatibility altogether
 ; TODO: change return false to return ""
 ;			or store the content in a ByRef variable 
 ;			and return the amount read (if nothing is read this would be 0 and intuitive false

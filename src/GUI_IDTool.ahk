@@ -22,7 +22,6 @@
 */
 
 showIDTool:
-Gui, +Disabled	; disable the main window
 Gui, idTool:+Owner -MinimizeBox +ToolWindow
 Gui, idTool:Add, Text,, Identify the following controls in the`nPokerStars client by right clicking on them:
 
@@ -52,7 +51,7 @@ getPSControl:
 MouseGetPos, , , id, selectedControl
 WinGetClass, class, ahk_id %id%
 WinGetTitle, title, ahk_id %id%
-if (InStr(class, "#32770") and InStr(title, "PokerStars Lobby"))
+if (InStr(class, "#32770") and InStr(title, "PokerStars Lobby")) ; TODO adapt to use PS_CLASS and PS_LOBBY
 {
 	IfInString, selectedControl, PokerStarsButtonClass
 		{
@@ -76,5 +75,4 @@ idToolButtonCancel:
 idToolGuiClose:
 HotKey, $RButton, Off
 Gui, idTool:Destroy
-Gui, 1:-Disabled
 return

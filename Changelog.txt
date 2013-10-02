@@ -1,5 +1,19 @@
 
 ===================================================================================================
+ 4.3.0
+	- Added autodetermination of available Games (aka 'scroll down')
+	- Increased speed of logfile parser
+	- Increased update speed of Table counters
+	- Fixed counters not updating when paused/session stopped
+	- Fixed 'SNG Total Limit' counter not resetting on subsequent runs
+	- Added counters for games waiting and games registered since program start
+	- GUI overhaul
+	- Added option to wait for pending rematch decision (heads up)
+	- Added load/save defaults for main options
+	- Added favourites for filters
+	- Added parsing of backup logfile to account for PS starting new logfile at midnight
+	- Added check if PS client in SNG Lobby
+===================================================================================================
  4.2.3
 	- Bugfix: Logfile path auto detection failed on non-english Windows
 ===================================================================================================

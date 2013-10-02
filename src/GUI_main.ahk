@@ -27,133 +27,219 @@
 */
 BuildGui:
 Gui, color, white
-Gui, font, cOlive
+Gui, font, cOlive , Segoe UI
 
-Gui, add, tab2, 	vMainTab	, General|Advanced Settings
+Gui, add, Text,		y+15 Section																	, Register every (sec):
+Gui, add, Text, 																					, No of SNG:s to keep open:
+Gui, add, CheckBox,	y+14		vTotalLimitEnabled	gTotalLimitOnOff		, Limit total SNG:s to:
+Gui, add, CheckBox,	y+14		vLimitTimeEnabled	gLimitTimeOnOff			, Limit total time to (min):
+
+Gui, add, Edit,		ys-3	w40	vRegisterInterval				Right	Number	Limit3
+Gui, add, UpDown, 					gUpDownRegisterInterval		Range5-180				
+Gui, add, Edit,				wp	vKeepOpen						Right	Number	Limit3	
+Gui, add, UpDown, 					gEnableDefaultButtons		Range1-30				
+Gui, add, Edit,				wp	vTotalLimit						Right	Number	Limit3	
+Gui, add, UpDown,					gEnableDefaultButtons		Range1-300				
+Gui, add, Edit,				wp	vLimitTime						Right	Number	Limit3	
+Gui, add, UpDown,					gUpDownLimitTime			Range10-360				
+
+Gui, add, DropDownList, xs Section w130 vselectedFilter	gChangeActiveFilter	Disabled
+Gui, add, Button, ys-1 x+2				vButtonAdd		gButtonAddFilter	Disabled		, Edit
+Gui, add, Button, ys-1 x+2				vButtonDelete	gButtonDeleteFilter	Disabled		, Delete
+Gui, add, Button, xs Section			vButtonSafe		gButtonSafeDefault	Disabled		, Save as Default
+Gui, add, Button, ys x+2				vButtonLoad		gButtonLoadDefault	Disabled		, Load Default
+
+Gui, add, GroupBox, xs Section w90 h120 Disabled, Remaining
+Gui, Add, Text, xp+20 yp+20													, Time:
+Gui, Add, Edit, 			w50		vInfoTimeLeft		Center	Disabled
+Gui, Add, Text,																, Games:
+Gui, Add, Edit,				w50		vInfoGamesLeft		Center	Disabled
+
+Gui, add, GroupBox, ys w90 h120 Disabled, Registered
+Gui, Add, Text, xp+20 yp+20													, Session:
+Gui, Add, Edit,				w50		vInfoRegSession		Center	Disabled
+Gui, Add, Text,																, Total:
+Gui, Add, Edit,				w50		vInfoRegTotal		Center	Disabled
 
 
-Gui, add, Text,		y+15 Section																, Register every (sec):
-Gui, add, Text, 																				, No of SNG:s to keep open:
-Gui, add, CheckBox,	y+14		vTotalLimitEnabled	gSpinnersOnOff	Checked%TotalLimitEnabled%	, Limit total SNG:s to:
-Gui, add, CheckBox,	y+14		vLimitTimeEnabled	gSpinnersOnOff	Checked%LimitTimeEnabled%	, Limit total time to (min):
+;~ Gui, Add, Text, xs y+20	Section													, Remaining:
+;~ Gui, Add, Edit, w30 Hidden ; placeholder
+;~ Gui, Add, Text, 																, Registered:
+;~ Gui, Add, Text, ys	x+30														, Time:
+;~ Gui, Add, Edit, 			w50		vInfoTimeLeft		Center	Disabled
+;~ Gui, Add, Text, 																, Session:
+;~ Gui, Add, Edit,				w30		vInfoRegSession		Right	Disabled
+;~ Gui, Add, Text, ys																, Games:
+;~ Gui, Add, Edit,				w30		vInfoGamesLeft		Right	Disabled
+;~ Gui, Add, Text,																	, Total:
+;~ Gui, Add, Edit,				w30		vInfoRegTotal		Right	Disabled
 
-Gui, add, Edit,		ys-3	w40	vRegisterInterval			Number	Limit3	, %RegisterInterval%
-Gui, add, UpDown, 					gRegisterIntervalUpDown	Range5-180		, %RegisterInterval%
-Gui, add, Edit,				wp	vKeepOpen					Number	Limit3	, %keepOpen%
-Gui, add, UpDown, 											Range1-30		, %keepOpen%
-Gui, add, Edit,				wp	vTotalLimit					Number	Limit3	, %TotalLimit%
-Gui, add, UpDown,											Range1-300		, %TotalLimit%
-Gui, add, Edit,				wp	vLimitTime					Number	Limit3	, %LimitTime%
-Gui, add, UpDown,					gLimitTimeUpDown		Range10-360		, %LimitTime%
-
-; Gui, Add, Button, ys Disabled, TabControlResizeTest
-
-Gui, add, text, xs y+30 		w200	vCdown		cRed
-Gui, add, text, 				wp		vRegSofar			, SNG:s registered so far:
-Gui, add, text,					wp		vOpenTables			, Tables open/waiting:
-Gui, add, text,					wp		vStatus		cRed	, Status: Idle
-
-Gui, add, Button, xs	Section 			gRun			, Submit + Run
-Gui, Add, Button, 								Disabled	, Show Lobby
+Gui, add, Button, xs y+20	Section 		gRun			, Start session
+Gui, Add, Button, 				wp				Disabled	, Show Lobby
 Gui, Add, Button, ys							Disabled	, Pause
-Gui, Add, Button, 				wp							, Donate
+Gui, Add, Button, 											, Donate
 Gui, Add, Button, ys							Disabled	, Resume
+Gui, Add, Button, 											, Options
 
-
-Gui, tab, Advanced
-
-Gui, add, CheckBox,	y+14	Section	vGuardtimerEnabled	gSpinnersOnOff	Checked%GuardtimerEnabled%	, Disable if no user Input (min):
-Gui, add, CheckBox,	y+14			vscrldwnEnabled		gSpinnersOnOff	Checked%scrldwnEnabled%		, No. of available Games:
-Gui, add, CheckBox,	y+14	r2		vCloseIntervEnabled	gSpinnersOnOff	Checked%CloseIntervEnabled%	, Close lobbies every (sec):`n(manually Close with Win+c)
-
-Gui, add, Edit,		ys-3	w40		vGuardtimer						Number	Limit2				, %Guardtimer%
-Gui, add, UpDown, 													Range1-15					, %Guardtimer%
-Gui, add, Edit,				wp		vscrldwn						Number	Limit2				, %scrldwn%
-Gui, add, UpDown, 													Range1-21					, %scrldwn%
-Gui, add, Edit,				wp		vCloseInterv					Number	Limit3				, %CloseInterv%
-Gui, add, UpDown, 						gCloseIntervUpDown			Range5-180					, %CloseInterv%
-
-Gui, add, Checkbox, xs y+30			vBatchReg						Checked%BatchReg%			, Register with high frequency`nwhen no tables open/waiting
-Gui, add, Checkbox,					vSetReg							Checked%SetReg%				, Register in sets
-Gui, add, Checkbox,					vMinLob							Checked%MinLob%				, Move lobby off screen`n(Failsafe: Win+Shift+Home)
-Gui, add, Checkbox, 				vReturnFocus					Checked%ReturnFocus%		, Activate open table after registering
-Gui, add, Checkbox,					vAutoifFull						Checked%AutoIfFull%			, Register next if full
-Gui, add, Checkbox,					vTopReturn						Checked%TopReturn%			, Always start at top of lobby
-
-Gui, add, Checkbox, 		r2		vrequestElevation 				Checked%requestElevation%	, Request Admin Privileges?`n(requires restart)
-
-Gui, add, Button, , Identify PS controls
-
-;Gui, add, statusBar
-; TODO: change info area to use statusBar where appropriate
-
+Gui, add, statusBar
+SB_SetParts(160)
 
 Gui, show, AutoSize x%GuiScreenPosX% y%GuiScreenPosY%, SFSO %sfsoVersion%
 Gui, +HwndmainGuiId
-goSub, resizeTabControl
-goSub, SpinnersOnOff
+resetStatus()
+OnMessage(0x232,"WM_EXITSIZEMOVE")	; called after the GUI got moved
+gosub, ButtonLoadDefault
+gosub, LimitTimeOnOff
+gosub, TotalLimitOnOff
+
+oldRegisterInterval := RegisterInterval
+oldLimitTime := LimitTime
+oldCloseInterv := CloseInterv
+
+gosub, setupFilterManager
 Return
 
-; tab controls do not automatically get resized on Gui, Show, AutoSize
-; this is a manual workaround. Crude, but effective
-; parses all controls except the statusbar and the tab control itself
-; resizes the tab control using the controls furthest to the right and bottom
-resizeTabControl:
-WinGet, ControlList, ControlList, ahk_id %mainGuiId%
-WinGetPos, , , LeftMost, TopMost, ahk_id %mainGuiId%
-rightMost := 0
-bottomMost := 0
-Loop, Parse, ControlList, `n
+LimitTimeOnOff:
+if (A_GuiEvent == "Normal")
 {
-	if A_LoopField in msctls_statusbar321,SysTabControl321
-		continue
-	ControlGetPos, X, Y, Width, Height, %A_LoopField%, ahk_id %mainGuiId%
-	width += x
-	height += y
-	if (width > rightMost)
-		rightMost := width
-	if (height > bottomMost)
-		bottomMost := height
+	Gui, Submit, NoHide
+	GuiControl, Enabled%LimitTimeEnabled%	, LimitTime
+	gosub, enableDefaultButtons
 }
-; TODO this value changes with the font size, maybe even DPI setting
-bottomMost -= 20	; subtract the height of the tab controls item list
-guiControl, Move, MainTab, w%rightMost% h%bottomMost%
-Gui, Show, AutoSize
 return
 
-SpinnersOnOff:
+TotalLimitOnOff:
+if (A_GuiEvent == "Normal")
+{
+	Gui, Submit, NoHide
+	GuiControl, Enabled%TotalLimitEnabled%	, TotalLimit
+	gosub, enableDefaultButtons
+}
+return
+
+UpDownRegisterInterval:
+if (A_GuiEvent == "Normal")
+{
+	upDownChangeBy("RegisterInterval", 5)
+	gosub, enableDefaultButtons
+}
+return
+
+UpDownLimitTime:
+if (A_GuiEvent == "Normal")
+{
+	upDownChangeBy("LimitTime", 10)
+	gosub, enableDefaultButtons
+}
+return
+
+ButtonAddFilter:
+if showAddFilterGUI()
+	gosub, enableDefaultButtons
+return
+
+ButtonDeleteFilter:
+MsgBox, 1, Delete Filter, Press OK to delete filter`n   "%selectedFilter%"
+IfMsgBox, OK
+{
+	fileName := getFileName(selectedFilter)
+	FileDelete, %sfsoSettingsFolder%\Filters\%fileName%.ini
+	availableFilters := getFilterList()
+	filterList := ""
+	for i, filter in availableFilters
+		filterList .= "|" . filter
+	;~ StringReplace, filterList, filterList, |,
+	GuiControl, , selectedFilter	, %filterList%
+}
+return
+
+ChangeActiveFilter:
+if (A_GuiEvent == "Normal") ; only triggers on actual user input
+{
+	Gui, Submit, NoHide
+	stopRegistering := true
+	setActiveFilter(loadFilter(selectedFilter))
+	gosub, enableDefaultButtons
+}
+return
+
+enableFilterControls:
+GuiControl, Enable, ButtonDelete
+GuiControl, Enable, selectedFilter
+GuiControl, Enable, ButtonAdd
+return
+
+enableDefaultButtons:
+GuiControl, Enable, ButtonSafe
+GuiControl, Enable, ButtonLoad
+return
+
+disableDefaultButtons:
+GuiControl, Disable, ButtonSafe
+GuiControl, Disable, ButtonLoad
+return
+
+ButtonSafeDefault:
 Gui, Submit, NoHide
-GuiControl, Enabled%TotalLimitEnabled%	, TotalLimit
-GuiControl, Enabled%LimitTimeEnabled%	, LimitTime
-GuiControl, Enabled%GuardtimerEnabled%	, Guardtimer
-GuiControl, Enabled%scrldwnEnabled%		, scrldwn
-GuiControl, Enabled%CloseIntervEnabled%	, CloseInterv
+IniWrite, %RegisterInterval%	, %sfsoSettingsFolder%\SFSO.ini, Settings, RegisterInterval
+IniWrite, %KeepOpen%			, %sfsoSettingsFolder%\SFSO.ini, Settings, KeepOpen
+IniWrite, %TotalLimit%			, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimit
+IniWrite, %TotalLimitEnabled%	, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimitEnabled
+IniWrite, %LimitTime%			, %sfsoSettingsFolder%\SFSO.ini, Settings, LimitTime
+IniWrite, %LimitTimeEnabled%	, %sfsoSettingsFolder%\SFSO.ini, Settings, LimitTimeEnabled
+IniWrite, %selectedFilter%		, %sfsoSettingsFolder%\SFSO.ini, Settings, selectedFilter
+gosub, disableDefaultButtons
 return
 
-RegisterIntervalUpDown:
-upDownChangeBy("RegisterInterval", 5)
+ButtonLoadDefault:
+IniRead, RegisterInterval	, %sfsoSettingsFolder%\SFSO.ini, Settings, RegisterInterval		, 20
+IniRead, KeepOpen			, %sfsoSettingsFolder%\SFSO.ini, Settings, KeepOpen				, 3
+IniRead, TotalLimit			, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimit			, 4
+IniRead, TotalLimitEnabled	, %sfsoSettingsFolder%\SFSO.ini, Settings, TotalLimitEnabled	, 1
+IniRead, LimitTime			, %sfsoSettingsFolder%\SFSO.ini, Settings, LimitTime			, 30
+IniRead, LimitTimeEnabled	, %sfsoSettingsFolder%\SFSO.ini, Settings, LimitTimeEnabled		, 0
+IniRead, selectedFilter		, %sfsoSettingsFolder%\SFSO.ini, Settings, selectedFilter		, New Filter
+availableFilters := getFilterList()
+filterList := ""
+for i, filter in availableFilters
+{
+	filterList .= "|" . filter
+	if (filter == selectedFilter)
+		filterList .= "||"
+}
+StringReplace, filterList, filterList, |||, ||
+GuiControl, , selectedFilter	, %filterList%
+GuiControl, , RegisterInterval	, %RegisterInterval%
+GuiControl, , KeepOpen			, %KeepOpen%
+GuiControl, , TotalLimit		, %TotalLimit%
+GuiControl, , TotalLimitEnabled	, %TotalLimitEnabled%	
+GuiControl, , LimitTime			, %LimitTime%		
+GuiControl, , LimitTimeEnabled	, %LimitTimeEnabled%
+gosub, disableDefaultButtons
 return
 
-LimitTimeUpDown:
-upDownChangeBy("LimitTime", 10)
-return
-
-CloseIntervUpDown:
-upDownChangeBy("CloseInterv", 5)
-return
-
-buttonDonate:
+ButtonDonate:
 donation()
 Return
 
-buttonShowLobby:
-WinMove, PokerStars Lobby ahk_class #32770, , %psLobbyPosX%, %psLobbyPosY%
+ButtonShowLobby:
+WinMove, %PS_LOBBY% ahk_class %PS_CLASS%, , %psLobbyPosX%, %psLobbyPosY%
 GuiControl, Disable, Show Lobby
 return
 
-ButtonIdentifyPSControls:
-gosub, showIDTool
+ButtonOptions:
+gosub, showOptions
 return
+
+; called after the GUI window has been moved
+; see http://msdn.microsoft.com/en-us/library/windows/desktop/ms632623(v=vs.85).aspx
+WM_EXITSIZEMOVE()
+{
+	global
+	IfWinExist, ahk_id %mainGuiId%	; WM_EXITSIZEMOVE gets called at least once before the main GUI is shown at which point WinGetPos would fail
+		WinGetPos, GuiScreenPosX, GuiScreenPosY, , , ahk_id %mainGuiId%
+	return 0
+}
 
 GuiClose:
 GuiControlGet, lobbyRestoreEnabled, Enabled
@@ -169,8 +255,6 @@ upDownChangeBy(editControlVarName, amount)
 	global
 	local currentValue
 	GuiControlGet, currentValue, , %editControlVarName%
-	if (old%editControlVarName% == "")
-		old%editControlVarName% := currentValue
 	if (currentValue > old%editControlVarName%)
 		currentValue += amount
 	currentValue -= mod(currentValue , amount)
@@ -179,48 +263,84 @@ upDownChangeBy(editControlVarName, amount)
 }
 
 ; updates the info area
-; call setStatus() or setStatus(0) to only update openTables and regSoFar
+; call setStatus() or setStatus(0) to only update the counters
 setStatus(statusType=0)
 {
 	global
 	static oldStatus := 0
-	GuiControl, , OpenTables, Tables open/waiting: %OpenTables%
-	GuiControl, , RegSofar, SNG:s registered so far: %RegSofar%
+	local gamesOpen := gamesRunning + gamesWaiting
+	local gameStatus := ""
 	
+	if gamesOpen > 0
+	{
+		gameStatus := gamesRunning
+		if gamesWaiting > 0
+			gameStatus .= " +" . gamesWaiting
+	}
+	gameStatus .=  "`t`t" . gamesOpen
+	SB_SetText(gameStatus, 2)
+
+	if (TotalLimitEnabled)
+	{
+		gamesLeft := TotalLimit - regSofar
+		GuiControl, , InfoGamesLeft, %gamesLeft%
+	}
+	GuiControl, , InfoRegTotal, %gamesFinished%
+	GuiControl, , InfoRegSession, %RegSofar%
+
 	if (statusType == 0)
 		return
 	
+	if (statusType == REMAINING_TIME)
+		GuiControl, , InfoTimeLeft, %displayedTime%
+	if (statusType == USER_INACTIVE)
+	{
+		SB_SetText("Idle (User inactive)")
+		GuiControl, , InfoTimeLeft, %displayedTime%
+	}
 	if (statusType == MANUAL_PAUSE)
 	{
-		GuiControl, , cdown, Manually Paused %displayedTime%
-		GuiControl, , Status, Status: Waiting
+		SB_SetText("Idle (Manually Paused)")
+		GuiControl, , InfoTimeLeft, %displayedTime%
 	}
-	if (statusType == REMAINING_TIME)
-		GuiControl, , cdown, Running another (mm:ss): %displayedTime%
-	if (statusType == USER_INACTIVE)
-		GuiControl, , cdown, Stopped  due to inactivity!!! %displayedTime%
 	
 	if (oldStatus != statusType)
 	{
 		oldStatus := statusType
 		if (statusType == WAITING)
-			GuiControl, , Status, Status: Waiting
+			SB_SetText("Waiting")
 		if (statusType == REGISTERING)
-			GuiControl, , Status, Status: Registering
+			SB_SetText("Registering")
 		if (statusType == IDLE)
-			GuiControl, , Status, Status: Idle
+			SB_SetText("Idle")
 		if (statusType == SET_FULL)
-			GuiControl, , Status, Status: Set Full waiting
+			SB_SetText("Waiting (Set Full)")
+		if (statusType == NO_GAMES_AVAILABLE)
+			SB_SetText("Waiting for available games")
 		if (statusType == TOTAL_LIMIT_REACHED)
-		{
-			GuiControl, , cdown, SNG Total Limit reached
-			GuiControl, , Status, Status: Idle
-		}
+			SB_SetText("Idle (SNG Limit reached)")
 		if (statusType == LOBBY_NOT_FOUND)
-			GuiControl, , Status, Status: PokerStars Lobby not found
+			SB_SetText("Idle (Lobby not found)")
 		if (statusType == TIME_LIMIT_REACHED)
-			GuiControl, , cdown, Time Limit reached.
-		if (statusType == TIME_LIMIT_OFF)
-			GuiControl, , cdown, Time Limit off
+			SB_SetText("Idle (Time Limit reached)")
+		if (statusType == NOT_IN_SNG_LOBBBY)
+			SB_SetText("Idle (PS not in SNG Lobby")
+		if (statusType == WAITING_FOR_REMATCH)
+			SB_SetText("Waiting for rematch decision")
+		if (statusType == GAMECOUNT_MISMATCH)
+			SB_SetText("Unexpected number of games")
+		
+		
 	}
+}
+
+resetStatus()
+{
+	global gamesFinished
+	SB_SetText("Idle")
+	SB_SetText("`t`t0", 2)
+	GuiControl, , InfoTimeLeft,
+	GuiControl, , InfoGamesLeft,
+	GuiControl, , InfoRegSession, 0
+	GuiControl, , InfoRegTotal, %gamesFinished%
 }

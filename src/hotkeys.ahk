@@ -36,12 +36,12 @@ SetReg:=TmpSetReg
 Return
 */
 
-#+Home::WinMove, PokerStars Lobby ahk_class #32770, , 0, 0
+#Home::WinMove, %PS_LOBBY% ahk_class %PS_CLASS%, , 0, 0
  
 ~^!Q::ExitApp
 
 #if debug
-Esc::Reload
+#r::Reload
 
 Pause::
 ListVars
