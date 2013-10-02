@@ -1,27 +1,11 @@
 /*
-    SFSO - Stars Filtered SNG Opener
-    Copyright (C) 2008, 2009  Everlong@2p2 Code assembled from misc sources, thanks to _dave_, chris228, finnisher
-    Copyright (C) 2009, 2011-2013  Max1mums
-    Copyright (C) 2013  GreaseFire
-
-    Official thread for discussion, questions and new releases:
-    http://forumserver.twoplustwo.com/168/free-software/ahk-script-stars-filtered-sng-opener-234749/
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Author:    Everlong@2p2 Code assembled from misc sources, thanks to _dave_, chris228, finnisher
+Author:    Max1mums
+Author:    GreaseFire
 */
 
-sfsoVersion = 4.3.1	; Used for the GUI Title and to migrate settings
+
+sfsoVersion = 4.3.x alpha	; Used for the GUI Title and to migrate settings
 debug := false		; if true SFSO saves its settings in the working dir and enables Hotkeys for reload and ListVars at the bottom of the script
 #NoEnv
 #SingleInstance, Force
@@ -31,7 +15,6 @@ SetWorkingDir %A_ScriptDir%
 ;~ #Warn, LocalSameAsGlobal, Off
 SetBatchLines, -1
 SetTitleMatchMode, RegEx	; necessary to properly catch PS filter window (PSFilterManager.ahk)
-
 
 Menu, tray, tip, SFSO %sfsoVersion%
 
@@ -54,7 +37,7 @@ if firstRun
 	welcomeText .= "Please refer to the readme for further details and explanation of the settings available."
 	MsgBox, 4096, Welcome to Stars Filtered SNG Opener (SFSO), %welcomeText%
 	IniWrite, 0, %sfsoSettingsFolder%\SFSO.ini, Settings, firstRun
-	welcomeText =
+	VarSetCapacity(welcomeText, 0)
 }
 goSub, requestAdminRights
 goSub, setPSLogFilePath
@@ -77,6 +60,13 @@ Return
 
 
 run:
+SetTimer, register, off
+SetTimer, deadManSwitch, off
+SetTimer, updateWhilePaused, off
+SetTimer, Countdown, off
+SetTimer, NukeLobbies, off
+while (timersRunning > 0) ; wait for all timers to finish
+	Sleep, 100
 Gui, Submit, NoHide
 if (TotalLimitEnabled == false and LimitTimeEnabled == false)
 {
@@ -128,7 +118,7 @@ tables=
 waitForSetFinish := false
 if (totalLimitEnabled and (keepOpen > totalLimit))
 	keepOpen := totalLimit	; ensure totalLimit is obeyed even if keepOpen is higher than totalLimit 
-updateTourneyCount(false)
+updateTourneyCount(true)
 if minLob
 	gosub, moveLobby
 SetTimer, Register, 1000
@@ -153,14 +143,12 @@ setStatus(MANUAL_PAUSE)
 SetTimer, updateWhilePaused, 1000
 Return
 
-; called from a timer whose frequency is determined by RegisterInterval
+; called from a timer with fixed frequency to allow better response time to table count changing
 ; checks how many games are open/waiting
 ; determines if any more games need to be registered
-; if yes it will register for either:
-;	one game and then return
-;	as many games as currently needed (if batch register is enabled)
 ; TODO refactor condition checks into subroutines calling Exit if condition not met
 Register:
+timersRunning++
 ;WinGet, LobbyID, id, %PS_LOBBY_LOGGED_IN% ahk_class %PS_CLASS%	; TODO: notify user to log into PS, atm SFSO shows 'Lobby not found'
 IfWinNotExist, %PS_LOBBY_LOGGED_IN% ahk_class %PS_CLASS%
 {
@@ -184,7 +172,7 @@ if (waitForRematch and WinExist(PS_REMATCH_DIALOG . " ahk_class " . PS_CLASS))
 	setStatus(WAITING_FOR_REMATCH)
 	return
 }
-If (totalLimitEnabled and (RegSofar >= TotalLimit or OpenTables >= TotalLimit)) ; assert openTables <= regSoFar -> second part should not matter
+If (totalLimitEnabled and ((gamesPlayed + gamesWaiting) >= TotalLimit))
 {
 	Gosub, ButtonPause
 	setStatus(TOTAL_LIMIT_REACHED)
@@ -200,12 +188,11 @@ If (OpenTables >= KeepOpen) or waitForSetFinish
 	return
 }
 ;~ sanityCheck()
-if ((lastRegistration + interval) > A_TickCount)	; if %registerInterval% seconds have not passed yet we are done on this pass
-	return ; TODO prevents timely status updates 
 ; at this point we are ready to register for another game
 if learning
 {
 	scrldwn := gamesWaiting + 1
+	logwrite("learning: " . learning . ", scrldwn = " . scrlDwn)
 }
 ; assert 0 < scrldwn <= availableGames + 1
 ; assert gamesWaiting < scrldwn
@@ -215,15 +202,20 @@ if (scrldwn < gamesWaiting)
 	; assert gamesWaiting == availableGames
 	; no game available for registration, have to wait for a game to start
 	setStatus(NO_GAMES_AVAILABLE)
+	logwrite("Waiting for more games")
 	return
 }
+if ((lastRegistration + interval) > A_TickCount)	; if %registerInterval% seconds have not passed yet we are done on this pass
+	return
 
 setStatus(REGISTERING)
+logwrite("Registering...")
 registerForGame()
-If (BatchReg and (openTables == 0 or learning))	; TODO count running games and compare to that
+If (BatchReg and ((gamesRunning == 0) or learning))
 	lastRegistration := 0	; causes the next pass of this timer to register as well 
 else
 	lastRegistration := A_TickCount ; once there is 1+ game running (or if batchReg is off) we switch to obeying registerInterval
+timersRunning--
 Return
 
 
@@ -274,6 +266,7 @@ registerForGame() {
 		gosub, confirmRegistrationDialogs
 		if returnFocus
 			gosub, switchFocusToActiveGame
+		logwrite("Game registration triggered")
 	}
 }
 
@@ -341,7 +334,7 @@ selectNextGame(startFromTop = false)
 		If registerButtonVisible
 			return true
 		ControlSend, %psGamesList%, {%direction%}, %PS_LOBBY_LOGGED_IN% ahk_class %PS_CLASS%
-		Sleep,1000	; allow PS client to update its GUI (swapping the Register/Unregister buttons takes a moment)
+		Sleep,300	; allow PS client to update its GUI (swapping the Register/Unregister buttons takes a moment)
 		if (A_Index == scrlDwn)
 			direction := (direction == "Down" ? "Up" : "Down")	; flip direction between "Up" and "Down"
 	}
@@ -359,6 +352,7 @@ selectNextGame(startFromTop = false)
 	{
 		learning := false
 		scrlDwn -= 2
+		logwrite("learning off, scrldwn = " . scrlDwn)
 	}
 	return false
 }
@@ -368,7 +362,7 @@ selectNextGame(startFromTop = false)
 ; in its normal mode (sessionUpdate == true) it will parse only recently added lines from the logfile
 ; calling updateTourneyCount(false) will reset the below counters (except gamesFinished) and parse the full logfile
 ; updates these global variables:
-;	RegSoFar		(number of games registered on this run)
+;	gamesPlayed		(number of games registered on this run)
 ;	gamesFinished	(number of games registered since program start)
 ;	openTables		(number of running and registered games)
 ; 	gamesWaiting	(number of registered games only)
@@ -384,26 +378,17 @@ selectNextGame(startFromTop = false)
 ; these become interesting in exceptional situations (exiting out of an unfinished game for example causes that game to remain counted as registered)
 ; on a full pass (usually at session start) also checks PokerStars.log.1 (yesterdays backup log)
 ; 	to account for games registered/started before and finished after midnight
-updateTourneyCount(sessionUpdate = true) {
+updateTourneyCount(fullCount = false) {
 	global 
 	static regtourneys := ""
 	static waitList := ""
-	local logLines := ""
-	local tcount := 0
-	local tnumber := ""
-	local found := ""
+	static runningTotal := ""
 	
-	if sessionUpdate
-		logLines := CheckFile(logfile)
-	else	; prepare (reset) for starting a new run
+	local logLines := getLoglines(fullCount)
+	
+	if fullCount ; prepare (reset) for starting a new run
 	{
-		FileGetSize, size0, logfile
-		FileGetSize, size1, backuplog
-		VarSetCapacity(logLines, size0 + size1)
-		logLines := checkFile(backupLog, 1) ; get yesterdays log
-		;~ logLines := CheckFile(logfile,1)	; append todays log
-		logLines .= CheckFile(logfile,1)	; append todays log
-		regSoFar := 0
+		gamesPlayed := 0
 		gamesWaiting := 0
 		gamesRunning := 0
 		openTables := 0
@@ -420,23 +405,35 @@ updateTourneyCount(sessionUpdate = true) {
 			if (line2 == "add")
 			{
 				if (setAdd(waitList, line3))
+				{
 					gamesWaiting++
+					if !fullCount
+						logwrite("Game " . line3 . " registered")
+				}
 				continue
 			}
-			if (line2 == "shown")
-			{
-				if (setAdd(tables,line3))
-					gamesRunning++
-				If (setRemove(waitList, line3))
-					gamesWaiting--
-				continue
-			}
+			;~ if (line2 == "shown")
+			;~ {
+				;~ if (setAdd(tables,line3))
+					;~ gamesRunning++
+				;~ If (setRemove(waitList, line3))
+					;~ gamesWaiting--
+				;~ continue
+			;~ }
 			if (line2 == "remove")
 			{
 				if (setRemove(tables,line3))
+				{
 					gamesRunning--
+					if !fullCount
+						logwrite("Game " . line3 . " finished")
+				}
 				If (setRemove(waitList, line3))	; triggers when unregistering a game
+				{
 					gamesWaiting--
+					if !fullCount
+						logwrite("Game " . line3 . " unregistered")
+				}
 				continue
 			}
 		}
@@ -445,115 +442,76 @@ updateTourneyCount(sessionUpdate = true) {
 			StringSplit, line, A_LoopField, '
 			if (line1 == "TournFrame ")
 			{
-				if (setAdd(tables, line2))
-					gamesRunning++
 				If (setRemove(waitList, line2))
+				{
 					gamesWaiting--
+					if !fullCount
+						logwrite("Game " . line2 . " started, table created")
+				}
+				if (setAdd(tables, line2))
+				{
+					gamesRunning++
+					if !fullCount
+						logwrite("Game " . line2 . " running, table created")
+				}
 				continue
 			}
 			if (line1 == "~TournFrame ")
 			{
-				if (setRemove(tables, line2))
-					gamesRunning--
 				If (setRemove(waitList, line2))
+				{
 					gamesWaiting--
+					if !fullCount
+						logwrite(">>> Game " . line2 . " started, table destroyed")
+				}
+				if (setRemove(tables, line2))
+				{
+					gamesRunning--
+					if !fullCount
+						logwrite("Game " . line2 . " finished, table destroyed")
+				}
 				continue
 			}
 		}
 	}
-	if sessionUpdate
+	Loop, Parse, tables, -,
 	{
-		Loop, Parse, tables, -,
-		{
-			if (setAdd(regtourneys,A_LoopField))
-			{
-				RegSofar++
-				gamesFinished++
-			}
-		}
+		if (setAdd(regtourneys,A_LoopField))
+			gamesPlayed++
+		if(setAdd(runningTotal, A_LoopField))
+			gamesFinished++
+		if A_LoopField is not digit
+			logwrite(">>> " . A_LoopField . " encountered in tables")
+	}
+	if (TotalLimitenabled and ( TotalLimit - gamesPlayed) < 0)
+	{
+		logwrite(">>> Registered " . ( TotalLimit - gamesPlayed) . " too many games!")
 	}
 	openTables := gamesRunning + gamesWaiting
 	setStatus()	; update info area
+	logwrite("Games waiting: " . gamesWaiting . ", running: " . gamesRunning . ", open tables: " . openTables ", registered: " . gamesPlayed)
+	logwrite("Games tracked:    " . tables)
+	logwrite("Games waiting:    " . waitlist)
+	logwrite("Games registered: " . regtourneys)
+	logwrite("Games finished:   " . runningTotal)
 }
 
 
-;~ updateTourneyCount(sessionUpdate = true) {
-	;~ global logfile, RegSofar, tables, openTables, gamesFinished, gamesWaiting
-	;~ static regtourneys := ""
-	;~ static waitList := ""
-	;~ logLines := ""
-	;~ found := ""
-	
-	;~ if sessionUpdate
-		;~ logLines := CheckFile(logfile)
-	;~ else	; prepare (reset) for starting a new run
-	;~ {
-		;~ logLines := CheckFile(logfile,1)
-		;~ regSoFar := 0
-		;~ gamesWaiting := 0
-		;~ openTables := 0
-		;~ regtourneys := ""
-		;~ waitList := ""
-	;~ }
-	;~ Loop, Parse, logLines, `r`n,
-	;~ {
-		;~ If (InStr(A_LoopField, "RT ", true))
-		;~ {
-			;~ gameNumber := RegExReplace(A_LoopField, "AS)RT shown (\d+)", "$1", found)
-			;~ if found
-			;~ {
-				;~ If (setRemove(waitList, gameNumber))
-					;~ gamesWaiting--
-				;~ continue
-			;~ }
-			;~ gameNumber := RegExReplace(A_LoopField, "AS)RT remove (\d+)", "$1", found)
-			;~ if found
-			;~ {
-				;~ if (setRemove(tables,gameNumber))
-					;~ openTables--
-				;~ If (setRemove(waitList, gameNumber))	; triggers when unregistering a game
-					;~ gamesWaiting--
-				;~ continue
-			;~ }
-			;~ gameNumber := RegExReplace(A_LoopField, "AS)RT add (\d+).+$", "$1", found)
-			;~ if found
-			;~ {
-				;~ if (setAdd(tables,gameNumber))
-				;~ {
-					;~ if (setAdd(waitList, gameNumber))
-						;~ gamesWaiting++
-					;~ openTables++
-				;~ }
-				;~ continue
-			;~ }
-		;~ }
-	;~ }
-	;~ if sessionUpdate
-	;~ {
-		;~ Loop, Parse, tables, -,
-		;~ {
-			;~ if (setAdd(regtourneys,A_LoopField))
-			;~ {
-				;~ RegSofar++
-				;~ gamesFinished++
-			;~ }
-		;~ }
-	;~ }
-	;~ setStatus()	; update info area
-;~ }
-
-
 NukeLobbies:
+timersRunning++
 GroupClose, TLobbies, A
+timersRunning--
 Return
 
 
 deadManSwitch:
+timersRunning++
 If (A_TimeIdle > killtime)
 {
 	Gosub, ButtonPause
 	setStatus(USER_INACTIVE)
 }
+timersRunning--
 Return
 
 
@@ -574,6 +532,7 @@ Return
 
 
 Countdown:
+timersRunning++
 remainingTime := endTime
 EnvSub remainingTime, %A_Now%, Seconds
 m := remainingTime // 60
@@ -586,6 +545,7 @@ If (A_now > endTime)
 	Gosub, ButtonPause
 	setStatus(TIME_LIMIT_REACHED)
 }
+timersRunning--
 Return
 
 
