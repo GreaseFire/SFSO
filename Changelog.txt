@@ -1,5 +1,10 @@
 
 ===================================================================================================
+ 4.3.2
+	- Bugfix: Running games were miscounted on subsequent sessions
+	- Bugfix: Waiting (registered but not started) games were not counted towards SNG Total Limit
+
+===================================================================================================
  4.3.1
 	- Increased wait time when switching from a registered to a non-registered game
 	- Reintroduced "available games" setting
