@@ -21,7 +21,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-sfsoVersion = 4.2.2	; Used for the GUI Title and to migrate settings
+sfsoVersion = 4.2.3	; Used for the GUI Title and to migrate settings
 debug := false		; if true SFSO saves its settings in the working dir and enables Hotkeys for reload and ListVars at the bottom of the script
 #NoEnv
 #SingleInstance, Force

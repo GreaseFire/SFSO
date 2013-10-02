@@ -42,7 +42,9 @@ IfNotExist, %psSettingsFolder%
 	{
 		WinGetText, visibleText
 		WinClose
-		StringTrimLeft, visibleText, visibleText, 9		; removes 'Address: ' at the beginning
+		StringGetPos, pos, visibleText, :%A_Space%	; account for 'Address' being a localized String in Windows
+		pos += 2
+		StringTrimLeft, visibleText, visibleText, pos		; removes 'Address: ' at the beginning
 		StringGetPos, pathEndPos, visibleText, `r
 		StringLeft, psSettingsFolder, visibleText, pathEndPos	; removes everything from the first `r`n onwards
 	}

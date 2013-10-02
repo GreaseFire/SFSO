@@ -1,5 +1,8 @@
 
 ===================================================================================================
+ 4.2.3
+	- Bugfix: Logfile path auto detection failed on non-english Windows
+===================================================================================================
  4.2.2
 	- Increased reliability of table activation
 	- Added safeguard for buyin/confirm dialogs left open after failed registration attempt
