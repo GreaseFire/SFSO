@@ -28,7 +28,6 @@ Author:    GreaseFire
  4.0 version fixed by Max1mums
 */
 
-
 sfsoVersion = 4.2	; Used for the GUI Title and to migrate settings
 debug := false		; if true SFSO saves its settings in the working dir and enables Hotkeys for reload and ListVars at the bottom of the script
 #NoEnv
