@@ -1,7 +1,27 @@
 /*
-Author:    Everlong@2p2 Code assembled from misc sources, thanks to _dave_, chris228, finnisher
-Author:    Max1mums
-Author:    GreaseFire
+    SFSO - Stars Filtered SNG Opener
+    Copyright (C) 2008, 2009  Everlong@2p2 Code assembled from misc sources, thanks to _dave_, chris228, finnisher
+    Copyright (C) 2009, 2011-2013  Max1mums
+    Copyright (C) 2013  GreaseFire
+
+    Official thread for discussion, questions and new releases:
+    http://forumserver.twoplustwo.com/168/free-software/ahk-script-stars-filtered-sng-opener-234749/
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ v4.21
+ - Bugfix: SNG Total Limit was always enabled
 
  v4.2
  - Restructured the GUI
@@ -28,7 +48,8 @@ Author:    GreaseFire
  4.0 version fixed by Max1mums
 */
 
-sfsoVersion = 4.2	; Used for the GUI Title and to migrate settings
+
+sfsoVersion = 4.21	; Used for the GUI Title and to migrate settings
 debug := false		; if true SFSO saves its settings in the working dir and enables Hotkeys for reload and ListVars at the bottom of the script
 #NoEnv
 #SingleInstance, Force
@@ -219,7 +240,7 @@ OpenTables := CountTourneys()
 If OpenTables is not Number
 	OpenTables := 0
 ;setStatus(TABLES)	; implicitly done on any call to setStatus() now
-If (RegSofar >= TotalLimit or OpenTables >= TotalLimit) ; assert openTables <= regSoFar -> second part should not matter
+If (totalLimitEnabled and (RegSofar >= TotalLimit or OpenTables >= TotalLimit)) ; assert openTables <= regSoFar -> second part should not matter
 {
 	Gosub, ButtonPause
 	setStatus(TOTAL_LIMIT_REACHED)

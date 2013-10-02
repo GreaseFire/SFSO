@@ -21,7 +21,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-;written for AHK build 1.0.45.4
+; written for AHK build 1.0.45.4
 ; ensures SFSO is run with AHK_L (ANSI 32-bit) build 1.1.13.00 or higher
 
 if A_AhkVersion < 1.1.13.00
