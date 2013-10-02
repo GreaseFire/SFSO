@@ -47,6 +47,9 @@ Gui, options:add, Button, gOpenSettingsFolder, Open SFSO Settings Folder
 
 Gui, options:+Owner +ToolWindow
 
+GuiControl, options:Enabled%GuardtimerEnabled%	, Guardtimer
+GuiControl, options:Enabled%CloseIntervEnabled%	, CloseInterv
+
 x := GuiScreenPosX + 30
 y := GuiScreenPosY + 30
 Gui, options:Show, x%X% y%Y%, SFSO Options
@@ -54,8 +57,8 @@ return
 
 SpinnersOnOff:
 Gui, options:Submit, NoHide
-GuiControl, Enabled%GuardtimerEnabled%	, Guardtimer
-GuiControl, Enabled%CloseIntervEnabled%	, CloseInterv
+GuiControl, options:Enabled%GuardtimerEnabled%	, Guardtimer
+GuiControl, options:Enabled%CloseIntervEnabled%	, CloseInterv
 gosub, enableDefaultButtons
 return
 

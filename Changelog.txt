@@ -1,5 +1,9 @@
 
 ===================================================================================================
+ 4.3.1
+	- Bugfix: Running games were miscounted on subsequent sessions
+	- Bugfix: Waiting (registered but not started) games were not counted towards SNG Total Limit
+===================================================================================================
  4.3.0
 	- Added autodetermination of available Games (aka 'scroll down')
 	- Increased speed of logfile parser

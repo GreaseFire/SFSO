@@ -21,7 +21,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-sfsoVersion = 4.3.0	; Used for the GUI Title and to migrate settings
+sfsoVersion = 4.3.1	; Used for the GUI Title and to migrate settings
 debug := false		; if true SFSO saves its settings in the working dir and enables Hotkeys for reload and ListVars at the bottom of the script
 #NoEnv
 #SingleInstance, Force
@@ -341,7 +341,7 @@ selectNextGame(startFromTop = false)
 		If registerButtonVisible
 			return true
 		ControlSend, %psGamesList%, {%direction%}, %PS_LOBBY_LOGGED_IN% ahk_class %PS_CLASS%
-		Sleep,300	; allow PS client to update its GUI (swapping the Register/Unregister buttons takes a moment)
+		Sleep,1000	; allow PS client to update its GUI (swapping the Register/Unregister buttons takes a moment)
 		if (A_Index == scrlDwn)
 			direction := (direction == "Down" ? "Up" : "Down")	; flip direction between "Up" and "Down"
 	}
