@@ -4,8 +4,8 @@
     Copyright (C) 2009, 2011-2013  Max1mums
     Copyright (C) 2013  GreaseFire
 
-	Official thread for discussion, questions and new releases:
-	http://forumserver.twoplustwo.com/168/free-software/ahk-script-stars-filtered-sng-opener-234749/
+    Official thread for discussion, questions and new releases:
+    http://forumserver.twoplustwo.com/168/free-software/ahk-script-stars-filtered-sng-opener-234749/
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+ v4.11
+ - Bugfix: 4.1 didn't actually save its Settings (d'oh!)
+ 
  v4.1
  - SFSO will now remember its on screen position
  - Added check whether script is running in ANSI mode
@@ -56,6 +59,9 @@ if A_IsUnicode
 	MsgBox, SFSO requires the ANSI (32-bit) installation of AutoHotkey_L.`nPlease rerun the AutoHotkey setup. SFSO will now exit.
 	ExitApp
 }
+
+IfNotExist, %sfsoSettingsFolder%\			; ensure AppData\SFSO\ exists, otherwise saving Settings won't work
+	FileCreateDir, %sfsoSettingsFolder%
 
 goSub, loadSettings
 goSub, requestAdminRights
