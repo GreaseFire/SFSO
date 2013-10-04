@@ -1,3 +1,25 @@
+/*
+    SFSO - Stars Filtered SNG Opener
+    Copyright (C) 2008, 2009  Everlong@2p2 Code assembled from misc sources, thanks to _dave_, chris228, finnisher
+    Copyright (C) 2009, 2011-2013  Max1mums
+    Copyright (C) 2013  GreaseFire
+
+    Official thread for discussion, questions and new releases:
+    http://forumserver.twoplustwo.com/168/free-software/ahk-script-stars-filtered-sng-opener-234749/
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 ; Attempts to find the correct path for pokerstars.log.0 utilizing the
 ; 'Open My Settings Folder' entry in PokerStars clients 'Help' menu.
@@ -40,161 +62,105 @@ IfNotExist, %psSettingsFolder%
 	}
 	IniWrite, %psSettingsFolder%, %sfsoSettingsFolder%\SFSO.ini, Settings, psSettingsFolder
 }
-logfilePathCurrent := psSettingsFolder . "\pokerstars.log.0"
-logfilePathBackup := psSettingsFolder . "\pokerstars.log.1"
-
-IfNotExist %logfilePathCurrent%
+logfile := psSettingsFolder . "\pokerstars.log.0"
+backupLog := psSettingsFolder . "\pokerstars.log.1"
+IfNotExist %logfile%
 {
-	MsgBox, Could not find "%logfilePathCurrent%", please recheck the configuration.
+	MsgBox, Could not find "%logfile%", please recheck the configuration.
 	ExitApp
 }
+;~ IfNotExist %backupLog%
+;~ {
+	;~ MsgBox, Could not find "%backupLog%", please recheck the configuration.
+	;~ ExitApp
+;~ }
 return
 
-; call with getEverything == true to retrieve the full content of PS logfiles (active and last days backup)
-; if getEverything == false returns only lines added to the current logfile since the last call to getLoglines
-; returns an empty string if logfile doesn't exist or doesn't contain any new lines
-; getEverything corresponds to updateTourneyCount()'s fullCount parameter
-getLoglines(getEverything = false)
-{
-	Critical
-	global logfilePathCurrent, logfilePathBackup
-	static filePointer := 0
-	
-	loglinesCapacity := 0
-	loglines := ""
-    oldLines := ""
-	tmpLines := ""
-    newLines := ""
-    
-	if getEverything ; get full content of both files
+; TODO: get rid of this coding horror (as well as checkFile)
+ReplaceByte( hayStackAddr, hayStackSize, ByteFrom=0, ByteTo=1, StartOffset=0, NumReps=-1)
+{	Static fun := ""
+	IfEqual,fun,
 	{
-		filePointer := 0 ; reset the file pointer to ensure we read everything from logfileCurrent afterwards
-		logfileBackup := FileOpen(logfilePathBackup, "r")
-		if IsObject(logfileBackup) ; fails for example on fresh installs of PS
-		{
-			loglinesCapacity += logFileBackup.length
-			getFileContent(logFileBackup, oldLines)
-			logfileBackup.Close()
-		}
+		h=
+		( LTrim join
+			5589E553515256579C8B4D0C8B451831D229C17E25837D1C00741F8B7D0801C70FB6451
+			00FB65D14FCF2AE750D885FFF42FF4D1C740409C975EF9D89D05F5E5A595BC9C21800
+		)
+		VarSetCapacity(fun,StrLen(h)//2)
+		Loop % StrLen(h)//2
+			NumPut("0x" . SubStr(h,2*A_Index-1,2), fun, A_Index-1, "Char")
 	}
-	
-	logfileCurrent := FileOpen(logfilePathCurrent, "r")
-	if IsObject(logfileCurrent)
-	{
-		; if PS has moved to a new logfile our former logfileCurrent will now be logfileBackup
-		; and logfileCurrent will point to a 'fresh' logfile
-		; if this happens we check first if logfileBackup has any remaining lines left to read
-		if (filePointer > logFileCurrent.length) ; triggers when PS client moves to a new logfile
-		{
-			logfileBackup := FileOpen(logfilePathBackup, "r")
-			if (IsObject(logfileBackup) and (logfileBackup.length > filePointer))
-			{
-               getFileContent(logFileBackup, tmpLines, filePointer)
-               logfileBackup.Close()
-			}
-			filePointer := 0 ; reset filePointer so we get everything from the new logfile
-		}
-		loglinesCapacity += logFileCurrent.length
-		getFileContent(logFileCurrent, newLines, filePointer)
-		filePointer := logfileCurrent.Position
-		logfileCurrent.Close()
-	}
-   VarSetCapacity(loglines, loglinesCapacity)
-   loglines := oldlines . tmpLines . newLines
-   return loglines
+	Return DllCall(&fun
+		, "uint",haystackAddr, "uint",hayStackSize, "short",ByteFrom, "short",ByteTo
+		, "uint",StartOffset, "int",NumReps)
 }
 
-; retrieves a files content from offset to eof
-; uses rawRead() to allow for nul chars in file
-getFileContent(ByRef file, ByRef dest, offset = 0)
-{
-   if IsObject(file)
-   {
-      file.seek(offset)
-      VarSetCapacity(dest, file.length - offset)
-      file.rawRead(dest, file.length)
-      VarSetCapacity(dest, -1) ; rawRead doesn't update varLength
-      sanitizeStr(dest)
+; mode == 1	returns full File content
+; mode == 0	returns only what was appended to File since the last call to CheckFile
+; returns false on error
+; TODO AHK_L allows implementing this functionality with a file object. Using that should avoid the Unicode incompatibility altogether
+; TODO: change return false to return ""
+;			or store the content in a ByRef variable 
+;			and return the amount read (if nothing is read this would be 0 and intuitive false
+;		refactor DllCall and VarSetCapacity for Unicode compatibility
+; THX Sean for File.ahk : http://www.autohotkey.com/forum/post-124759.html
+CheckFile(File, mode=0) {
+   Static CF := ""   ; Current File
+   Static FP := 0    ; File Pointer
+   Static OPEN_EXISTING := 3
+   Static GENERIC_READ := 0x80000000
+   Static FILE_SHARE_READ := 1
+   Static FILE_SHARE_WRITE := 2
+   Static FILE_SHARE_DELETE := 4
+   Static FILE_BEGIN := 0
+   nSize := 0
+   BatchLines := A_BatchLines
+   SetBatchLines, -1
+   If (File != CF) {
+      CF := File
+      FP := 0
    }
-}
-
-; based on replaceByte()
-; see: http://www.autohotkey.com/board/topic/23627-machine-code-binary-buffer-searching-regardless-of-null/page-4
-; not compatible with AHK_L Unicode builds but ~100 times faster than any equivalent written in AHK
-; during tests AHK versions of replaceByte took about 1.3 secs for a ~2MB file which is waaaay to slow for production use
-; might work on Unicode with calling RtlAnsiStringToUnicodeString
-; fun contains ASM code after first call:
-/*
-proc ReplaceByte stdcall uses ebx ecx edx esi edi, hayStack, hayStackSize, ByteFrom:WORD, ByteTo:WORD, StartOffset, NumReps
-	pushfd
-
-	mov	ecx,[hayStackSize]
-	mov	eax,[StartOffset]
-	xor	edx,edx
-	sub	ecx,eax
-	jle	.done
-	cmp	[NumReps],0
-	jz	.done
-
-	mov	edi,[hayStack]
-	add	edi,eax ;edi=&(hayStack[StartOffset])
-
-	movzx	eax,byte [ByteFrom]
-	movzx	ebx,byte [ByteTo]
-	cld
-
-.rep:
-	repne	scasb
-	jne	.done
-
-	mov	[edi-1],bl
-	inc	edx
-	dec	[NumReps]
-	jz	.done
-	or	ecx,ecx
-	jnz	.rep
-
-.done:
-	popfd
-	mov	eax,edx
-	ret
-endp
-*/
-
-; replaces null (0x00) bytes which cause AHK's String functions to end prematurely by first replacing them with chr(1) (0x01)
-;	and removing those via StringReplace afterwards
-sanitizeStr(ByRef string)
-{
-   static filler := chr(1)
-   static inlineASM := setStaticInlineASM(inlineASM)
-   IfEqual, inlineASM, 
-   {
-           h =
-       ( LTrim join
-           5589E553515256579C8B4D0C8B451831D229C17E25837D1C00741F8B7D0801C70FB6451
-           00FB65D14FCF2AE750D885FFF42FF4D1C740409C975EF9D89D05F5E5A595BC9C21800
-       )
-       VarSetCapacity(inlineASM,StrLen(h)//2)
-       Loop % StrLen(h)//2
-       NumPut("0x" . SubStr(h,2*A_Index-1,2), inlineASM, A_Index-1, "Char")
+   hFile := DllCall("CreateFile"
+                  , "Str",  File
+                  , "Uint", GENERIC_READ
+                  , "Uint", FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE
+                  , "Uint", 0
+                  , "Uint", OPEN_EXISTING
+                  , "Uint", 0
+                  , "Uint", 0)
+   If (!hFile) {
+      CF := ""
+      FP := 0
+      SetBatchLines, %BatchLines%
+      Return False
    }
-   if (DllCall(&inlineASM, "uint",&string, "uint",VarSetCapacity(string), "short",0, "short",1, "uint",0, "int",-1))
-   {
-      VarSetCapacity(string, -1) ; necessary for StringReplace to work
-      StringReplace, string, string, %filler%, , A
+   DllCall("GetFileSizeEx"
+         , "Uint",   hFile
+         , "Int64P", nSize)
+   if mode=1
+	FP:=1
+   If (FP = 0 Or nSize <= FP) {
+      FP := nSize
+      SetBatchLines, %BatchLines%
+      DllCall("CloseHandle", "Uint", hFile) ; close file
+     Return False
    }
-}
-
-setStaticInlineASM(ByRef inlineASM)
-{
-	if inlineASM
-      return
-	h =
-	( LTrim join
-		5589E553515256579C8B4D0C8B451831D229C17E25837D1C00741F8B7D0801C70FB6451
-		00FB65D14FCF2AE750D885FFF42FF4D1C740409C975EF9D89D05F5E5A595BC9C21800
-	)
-	VarSetCapacity(inlineASM,StrLen(h)//2)
-	Loop % StrLen(h)//2
-	NumPut("0x" . SubStr(h,2*A_Index-1,2), inlineASM, A_Index-1, "Char")
+   DllCall("SetFilePointerEx"
+         , "Uint",  hFile
+         , "Int64", FP
+         , "Uint",  0
+         , "Uint",  FILE_BEGIN)
+   VarSetCapacity(Tail, Length := nSize - FP, 0)
+   DllCall("ReadFile"
+         , "Uint",  hFile
+         , "Str",   Tail
+         , "Uint",  Length
+         , "UintP", Length
+         , "Uint",  0)
+   DllCall("CloseHandle", "Uint", hFile)
+   ReplaceByte( &Tail, Length)
+   VarSetCapacity(Tail, -1)
+   FP := nSize
+   SetBatchLines, %BatchLines%
+   Return Tail
 }

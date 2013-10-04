@@ -1,4 +1,30 @@
-; TODO: Option to disable lobby filter buttons while running -> no accidental changes
+/*
+    SFSO - Stars Filtered SNG Opener
+    Copyright (C) 2008, 2009  Everlong@2p2 Code assembled from misc sources, thanks to _dave_, chris228, finnisher
+    Copyright (C) 2009, 2011-2013  Max1mums
+    Copyright (C) 2013  GreaseFire
+
+    Official thread for discussion, questions and new releases:
+    http://forumserver.twoplustwo.com/168/free-software/ahk-script-stars-filtered-sng-opener-234749/
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+; option: disable lobby filter buttons while running -> no accidental changes
+; add exclusion keywords for register, buyin, lobbys and reg in tourn. dialogs
+; gui window to edit/add/remove filters
+; TODO retrieve hwnd of filter window and operate on that - regex is slowing down get and set filter
 
 /*
 Terminology:
@@ -55,17 +81,8 @@ showAddFilterGUI()
 		}
 		newFilter := getActiveFilter()
 		saveFilter(newFilter, newFilterName)
+		GuiControl, , selectedFilter, %newFilterName%||
 		selectedFilter := newFilterName
-		availableFilters := getFilterList()
-		filterList := ""
-		for i, filter in availableFilters
-		{
-			filterList .= "|" . filter
-			if (filter == selectedFilter)
-				filterList .= "||"
-		}
-		StringReplace, filterList, filterList, |||, ||
-		GuiControl, , selectedFilter, %filterList%
 		ret := true
 	}
 	closePSFilterWindow()
@@ -157,10 +174,17 @@ getActiveFilter()
 ; overrides TitleMatchMode while setting filter states to improve speed
 setActiveFilter(filter)
 {
-	global PS_FILTER_WINDOW, PS_CLASS, learning, scrlDwn
-	
-	learning := true
-	scrlDwn := 1
+	global PS_FILTER_WINDOW, PS_CLASS, learning, scrlDwn, OverrideScrlDwn, availableGames
+	if OverrideScrlDwn
+	{
+		learning := false
+		scrlDwn := availableGames - 1
+	}
+	else
+	{
+		learning := true
+		scrlDwn := 1
+	}
 	filterID := openPSFilterWindow()
 	resetFilter()
 	overrideTitleMatchMode(true)

@@ -1,4 +1,26 @@
-﻿
+﻿/*
+    SFSO - Stars Filtered SNG Opener
+    Copyright (C) 2008, 2009  Everlong@2p2 Code assembled from misc sources, thanks to _dave_, chris228, finnisher
+    Copyright (C) 2009, 2011-2013  Max1mums
+    Copyright (C) 2013  GreaseFire
+
+    Official thread for discussion, questions and new releases:
+    http://forumserver.twoplustwo.com/168/free-software/ahk-script-stars-filtered-sng-opener-234749/
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 ; TODO: check integrity level of PS client first and only elevate script if necessary
 ;	See http://msdn.microsoft.com/en-us/library/bb625966.aspx
 requestAdminRights:
@@ -102,26 +124,4 @@ donation() {
 		ControlSetText, Edit1,
 		GuiControl, Disable, Donate
 	}
-}
-
-logwrite(line)
-{
-	Critical
-	static log := getStaticLog()
-
-	FormatTime, time, A_Now, [MM/dd HH:mm:ss]
-	log.write(time . "`t" . line . "`n")
-}
-
-; called once from logwrite when initializing static variables
-getStaticLog()
-{
-	static done
-	if done
-		return
-	else done := true
-	FileGetSize, size, %A_Temp%\SFSO.log.txt, M
-	if (size >= 10)
-		FileMove, %A_Temp%\SFSO.log.txt, %A_Temp%\SFSO.log.old.txt, 1	; create backup of previous logfile
-	return FileOpen(A_Temp . "\SFSO.log.txt", "a-wd`n") ; keep the logfile open between calls, locked against external writes or deletes
 }
